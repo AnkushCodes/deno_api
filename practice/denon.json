@@ -1,0 +1,20 @@
+{
+    "scripts": {
+      "start": {
+        "cmd": "deno run index.ts",
+        "debug": true,
+           "extensions": [ ".js", ".ts", ".json" ],
+            "watch": [ ".",
+                "controllers/", 
+                "middlewares/", 
+                "routes/" 
+            ],
+            
+            "allow": [  
+            "net", "env", "read"
+            ],
+             "execute": { ".js": ["deno", "run"],
+           ".ts": ["deno", "run"] }
+      }
+    }
+  }
