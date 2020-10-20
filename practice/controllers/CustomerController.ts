@@ -123,30 +123,34 @@ const updateCustomer = async ({
   }
 };
 
-const deleteCustomer =async(
-  {params,response}:{params:{id:string};
-response:any
-},)=>{
-await getCustomer({params:{"id":params.id},response});
-if(response.status ===400){
-  const errMsg =response.body.err;
-  response.status =404;
-  response.body ={err:errMsg};
-  return;
-}
-try{
-await client.connect();
-const result =await client.query("delete from customer where customerid=$1",
-    params.id);
-    response.status =204;
-}catch(error){
-response.status =500;
-response.body={err:error.message};
-}finally{
-  await client.end();
-}
+const deleteCustomer = async (
+  { params, response }: { params: { id: string }; response: any },
+) => {
+  await getCustomer({ params: { "id": params.id }, response });
+  if (response.status === 400) {
+    const errMsg = response.body.err;
+    response.status = 404;
+    response.body = { err: errMsg };
+    return;
+  }
+  try {
+    await client.connect();
+    const result = await client.query(
+      "delete from customer where customerid=$1",
+      params.id,
+    );
+    response.status = 204;
+  } catch (error) {
+    response.status = 500;
+    response.body = { err: error.message };
+  } finally {
+    await client.end();
+  }
 };
-export { addCustomer, getCustomer,
-   getCustomers, updateCustomer,
-  deleteCustomer
-  };
+export {
+  addCustomer,
+  deleteCustomer,
+  getCustomer,
+  getCustomers,
+  updateCustomer,
+};

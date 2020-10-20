@@ -1,7 +1,7 @@
 {
     "scripts": {
       "start": {
-        "cmd": "deno run index.ts",
+        "cmd": "deno run --unstable index.ts",
         "debug": true,
            "extensions": [ ".js", ".ts", ".json" ],
             "watch": [ ".",
