@@ -42,12 +42,14 @@ export const getToken = async (
           alg: "HS256",
           type: "JWT",
         };
-        const jwt = makeJwt({ header, payload, key });
+        const jwt = await makeJwt({ header, payload, key });
+
         response.body = { token: jwt, username: payload.iss };
         response.status = 200;
       }
     }
   } catch (error) {
+    console.log(error);
     response.status = 500;
     response.body = { err: error.toString() };
   }

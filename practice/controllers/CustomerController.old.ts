@@ -1,16 +1,20 @@
+import { Client } from "https://deno.land/x/postgres/mod.ts";
+import { connString } from "../config.ts";
 import { ICustomer } from "../model/Customer.ts";
-import { default as custRepo } from "../repository/CustomerRepo.ts";
+
+const client = new Client(connString);
 
 const getCustomers = async ({ response }: { response: any }) => {
   try {
-    const result = await custRepo.getCustomers();
+    await client.connect();
+    const result = await client.query("select * from customer");
     response.status = 200;
-    response.body = result;
+    response.body = result.rows;
   } catch (error) {
     response.status = 500;
-    response.body = {
-      err: error.toString(),
-    };
+    response.body = { err: error.toString() };
+  } finally {
+    await client.end();
   }
 };
 
@@ -18,18 +22,26 @@ const getCustomer = async (
   { params, response }: { params: { id: string }; response: any },
 ) => {
   try {
-    const result = await custRepo.getCustomer(params.id);
-    if (result.toString() === "") {
+    await client.connect();
+    const result = await client.query(
+      "select * from customer where customerid=$1",
+      params.id,
+    );
+    if (result.rows.toString() === "") {
       response.status = 404;
-      response.body = { err: "Customer " + params.id + " is not registered" };
+      response.body = {
+        err: "Customer" + params.id + "is not registered",
+      };
       return;
     } else {
-      response.status = result;
+      response.body = result.rows;
       response.status = 200;
     }
   } catch (error) {
-    response.status = 500;
     response.body = { err: error.toString() };
+    response.status = 200;
+  } finally {
+    await client.end();
   }
 };
 
@@ -38,31 +50,44 @@ const addCustomer = async (
 ) => {
   const body = await request.body();
   const customer: ICustomer = await body.value;
+
+  console.log(body.value);
+
   if (customer.name === "") {
-    response.body = {
-      err: "Name cannot be empty",
-    };
+    response.body = { err: "Name cannot be empty." };
     response.status = 500;
     return;
   }
+
   try {
-    const result = await custRepo.addCustomer(customer);
-    response.body = result;
+    await client.connect();
+    const result = await client.query(
+      "insert into customer(companyname,city,country) values ($1,$2,$3)",
+      customer.name,
+      customer.city,
+      customer.country,
+    );
+    response.body = customer;
     response.status = 201;
   } catch (error) {
-    response.status = 500;
     response.body = { err: error.message };
+    response.status = 500;
+  } finally {
+    await client.end();
   }
 };
 
-const updateCustomer = async (
-  { params, request, response }: {
-    params: { id: string };
-    request: any;
-    response: any;
-  },
-) => {
+const updateCustomer = async ({
+  params,
+  request,
+  response,
+}: {
+  params: { id: string };
+  request: any;
+  response: any;
+}) => {
   await getCustomer({ params: { "id": params.id }, response });
+
   if (response.status === 404) {
     const errMsg = response.body.err;
     response.body = { err: errMsg };
@@ -71,20 +96,30 @@ const updateCustomer = async (
   } else {
     const body = await request.body();
     const customer: ICustomer = await body.value;
-
     if (customer.name === "" || customer.name == null) {
       response.body = { err: "Name cannot be empty" };
       response.status = 500;
       return;
     }
+
     try {
-      const result = await custRepo.updateCustomer(params.id, customer);
-      response.body = result;
+      await client.connect();
+      await client.query(
+        "update customer set companyname=$1,city=$2,country=$3 where customerid=$4",
+        customer.name,
+        customer.city,
+        customer.country,
+        params.id,
+      );
+      response.body = customer;
       response.status = 200;
     } catch (error) {
       response.status = 500;
       response.body = { err: error.message };
+    } finally {
+      await client.end();
     }
+    // }
   }
 };
 
@@ -92,22 +127,29 @@ const deleteCustomer = async (
   { params, response }: { params: { id: string }; response: any },
 ) => {
   await getCustomer({ params: { "id": params.id }, response });
-  if (response.status === 404) {
+  if (response.status === 400) {
     const errMsg = response.body.err;
     response.status = 404;
     response.body = { err: errMsg };
     return;
   }
   try {
-    await custRepo.deleteCustomer(params.id);
-    response.body = { msg: "Customer id:" + params.id + " has been deleted." };
+    await client.connect();
+    const result = await client.query(
+      "delete from customer where customerid=$1",
+      params.id,
+    );
+    response.body = {
+      msg: "Username " + params.id + " has been deleted.",
+    };
     response.status = 204;
   } catch (error) {
     response.status = 500;
     response.body = { err: error.message };
+  } finally {
+    await client.end();
   }
 };
-
 export {
   addCustomer,
   deleteCustomer,

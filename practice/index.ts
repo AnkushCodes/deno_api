@@ -8,6 +8,7 @@ import { Application } from "https://deno.land/x/oak/mod.ts";
 import NotFound from "./controllers/NotFoundController.ts";
 import customerRouter from "./routes/CustomerRoute.ts";
 import userRouter from "./routes/UserRoute.ts";
+import tokenRouter from "./routes/TokenRoute.ts";
 
 const app = new Application();
 const env = Deno.env.toObject();
@@ -18,6 +19,7 @@ app.use(homeRouter.routes());
 
 app.use(customerRouter.routes());
 app.use(userRouter.routes());
+app.use(tokenRouter.routes());
 console.log(bgBlue(bold(green(`${HOST} ${PORT}`))));
 app.use(NotFound);
 await app.listen(`${HOST}:${PORT}`);

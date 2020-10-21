@@ -6,15 +6,15 @@ import {
   getCustomers,
   updateCustomer,
 } from "../controllers/CustomerController.ts";
-import { getColorEnabled } from "https://deno.land/std@0.73.0/fmt/colors.ts";
-import { Client } from "https://deno.land/x/postgres@v0.4.5/client.ts";
+import { authMiddleware } from "../middleware/AuthMiddleware.ts";
 
 const customerRouter = new Router();
 let path = "/api/customer/";
 
 customerRouter.get(path, getCustomers)
   .get(path + ":id", getCustomer)
-  .post(path, addCustomer)
-  .put(path + ":id", updateCustomer)
-  .delete(path + ":id", deleteCustomer);
+  .post(path, authMiddleware, addCustomer)
+  .put(path + ":id", authMiddleware, updateCustomer)
+  .delete(path + ":id", authMiddleware, deleteCustomer);
+
 export default customerRouter;
